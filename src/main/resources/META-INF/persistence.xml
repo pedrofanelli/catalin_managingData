@@ -20,7 +20,7 @@
 
             
             <!-- Specify logging -->
-            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             
             <property name="hibernate.use_identifier_rollback" value="true"/>
