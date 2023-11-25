@@ -9,7 +9,7 @@
         <!-- Specify the provider -->
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         
-        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        <!-- <exclude-unlisted-classes>false</exclude-unlisted-classes> -->
 
         <!-- Specify the JDBC driver and connection properties -->
         <properties>

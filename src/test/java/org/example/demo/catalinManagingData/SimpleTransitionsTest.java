@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SimpleTransitionsTest {
 
 	private static EntityManagerFactory emf =
-            Persistence.createEntityManagerFactory("ch10");
+            Persistence.createEntityManagerFactory("Chapter10");
 
     @Test
     public void makePersistent() {
