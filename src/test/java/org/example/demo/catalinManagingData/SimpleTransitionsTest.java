@@ -95,7 +95,7 @@ public class SimpleTransitionsTest {
         EntityManager em = emf.createEntityManager(); // Application-managed
         em.getTransaction().begin();
         Item someItem = new Item();
-        someItem.setName("Some Item");
+        someItem.setName("Some Item 265");
         em.persist(someItem);
         em.getTransaction().commit();
         em.close();
@@ -146,5 +146,69 @@ public class SimpleTransitionsTest {
                data before you close the persistence context.
              */
         assertThrows(LazyInitializationException.class, () -> item.getName());
+    }
+    
+    @Test
+    public void makeTransient() {
+        EntityManager em = emf.createEntityManager();
+        em.getTransaction().begin();
+        Item someItem = new Item();
+        someItem.setName("Some Item");
+        em.persist(someItem);
+        em.getTransaction().commit();
+        em.close();
+        Long ITEM_ID = someItem.getId();
+
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
+            /*
+               If you call <code>find()</code>, Hibernate will execute a <code>SELECT</code> to
+               load the <code>Item</code>. If you call <code>getReference()</code>, Hibernate
+               will attempt to avoid the <code>SELECT</code> and return a proxy.
+             */
+        Item item = em.find(Item.class, ITEM_ID);
+        //Item item = em.getReference(Item.class, ITEM_ID);
+
+            /*
+               Calling <code>remove()</code> will queue the entity instance for deletion when
+               the unit of work completes, it is now in <em>removed</em> state. If <code>remove()</code>
+               is called on a proxy, Hibernate will execute a <code>SELECT</code> to load the data.
+               An entity instance has to be fully initialized during life cycle transitions. You may
+               have life cycle callback methods or an entity listener enabled
+               (see <a href="#EventListenersInterceptors"/>), and the instance must pass through these
+               interceptors to complete its full life cycle.
+             */
+        em.remove(item);
+
+            /*
+                An entity in removed state is no longer in persistent state, this can be
+                checked with the <code>contains()</code> operation.
+             */
+        assertFalse(em.contains(item));
+
+            /*
+               You can make the removed instance persistent again, cancelling the deletion.
+             */
+        // em.persist(item);
+
+        // hibernate.use_identifier_rollback was enabled, it now looks like a transient instance
+        assertNull(item.getId());
+
+            /*
+               When the transaction commits, Hibernate synchronizes the state transitions with the
+               database and executes the SQL <code>DELETE</code>. The JVM garbage collector detects that the
+               <code>item</code> is no longer referenced by anyone and finally deletes the last trace of
+               the data.
+             */
+        em.getTransaction().commit();
+        em.close();
+
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
+
+        item = em.find(Item.class, ITEM_ID);
+        assertNull(item);
+        em.getTransaction().commit();
+        em.close();
     }
 }
