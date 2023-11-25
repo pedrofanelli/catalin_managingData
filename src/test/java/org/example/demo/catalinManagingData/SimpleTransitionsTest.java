@@ -14,9 +14,6 @@ public class SimpleTransitionsTest {
 	private static EntityManagerFactory emf =
             Persistence.createEntityManagerFactory("ch10");
 
-    private static EntityManagerFactory emf2 =
-            Persistence.createEntityManagerFactory("ch10_replicate");
-
     @Test
     public void makePersistent() {
         EntityManager em = emf.createEntityManager(); // Application-managed
