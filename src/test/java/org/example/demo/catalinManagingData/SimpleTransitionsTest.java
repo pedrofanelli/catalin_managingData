@@ -12,6 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SimpleTransitionsTest {
 
+	/**
+	 * Todos estos test corren uno después del otro, no se resetea la base en cada método
+	 * Sólo se resetea en cada corrida de test
+	 */
+	
 	private static EntityManagerFactory emf =
             Persistence.createEntityManagerFactory("Chapter10");
 
