@@ -304,7 +304,7 @@ public class SimpleTransitionsTest {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
         Item someItem = new Item();
-        someItem.setName("Some Item");
+        someItem.setName("Some Item identity");
         em.persist(someItem);
         em.getTransaction().commit();
         em.close();
