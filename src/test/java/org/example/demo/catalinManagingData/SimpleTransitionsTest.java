@@ -339,10 +339,15 @@ public class SimpleTransitionsTest {
         allItems.add(b);
         allItems.add(c);
         assertEquals(2, allItems.size()); // That seems wrong and arbitrary!
-        
+        assertEquals(a.getId(),c.getId());
+        assertFalse(a == c);
         /**
          * Porque a y b fueron "detached" juntos, es decir, referencian al mismo objeto en el mismo contexto, 
-         * y c fue en otro contexto con otro em por lo tanto es diferente
+         * y c fue en otro contexto con otro em por lo tanto es diferente.
+         * 
+         * Si hubieramos sobreescrito el .equals() method en el objeto, entonces si serían iguales, pero no lo hicimos,
+         * entonces recurre al default, que es == en Java. Es decir, la referencia, la key al objeto. En Hibernate, si
+         * bien puede ser que se referencie al mismo objeto, en diferentes contextos, son diferentes referencias o keys.
          */
 
     }
