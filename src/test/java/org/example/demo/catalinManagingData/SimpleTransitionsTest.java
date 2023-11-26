@@ -1,20 +1,26 @@
 package org.example.demo.catalinManagingData;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.FlushModeType;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceUnitUtil;
 
 import org.example.demo.models.Item;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
+import org.junit.jupiter.api.Test;
 
 
 
@@ -261,5 +267,78 @@ public class SimpleTransitionsTest {
         em.refresh(item);
         em.close();
         assertEquals("Concurrent Update Name", item.getName());
+    }
+    
+    @Test
+    public void flushModeType() {
+        EntityManager em = emf.createEntityManager();
+        em.getTransaction().begin();
+        Item someItem = new Item();
+        someItem.setName("Original Name");
+        em.persist(someItem);
+        em.getTransaction().commit();
+        em.close();
+        Long ITEM_ID = someItem.getId();
+
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
+
+        Item item = em.find(Item.class, ITEM_ID);
+        item.setName("New Name flushed");
+
+        // Disable flushing before queries:
+        em.setFlushMode(FlushModeType.COMMIT);
+
+        assertEquals(
+                "Original Name",
+                em.createQuery("select i.name from Item i where i.id = :id", String.class)
+                        .setParameter("id", ITEM_ID).getSingleResult()
+        );
+
+        em.getTransaction().commit(); // Flush!
+        em.close();
+    }
+    
+    @Test
+    public void scopeOfIdentity() {
+        EntityManager em = emf.createEntityManager();
+        em.getTransaction().begin();
+        Item someItem = new Item();
+        someItem.setName("Some Item");
+        em.persist(someItem);
+        em.getTransaction().commit();
+        em.close();
+        Long ITEM_ID = someItem.getId();
+
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
+
+        Item a = em.find(Item.class, ITEM_ID);
+        Item b = em.find(Item.class, ITEM_ID);
+        assertTrue(a == b);
+        assertTrue(a.equals(b));
+        assertEquals(a.getId(), b.getId());
+
+        em.getTransaction().commit();
+        em.close();
+        // Persistence Context is gone, 'a' and 'b' are now references to instances in detached state!
+
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
+
+        Item c = em.find(Item.class, ITEM_ID);
+        assertTrue(a != c); // The 'a' reference is still detached!
+        assertFalse(a.equals(c));
+        assertEquals(a.getId(), c.getId());
+
+        em.getTransaction().commit();
+        em.close();
+
+        Set<Item> allItems = new HashSet<>();
+        allItems.add(a);
+        allItems.add(b);
+        allItems.add(c);
+        assertEquals(2, allItems.size()); // That seems wrong and arbitrary!
+
     }
 }
