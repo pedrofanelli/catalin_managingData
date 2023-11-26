@@ -17,7 +17,9 @@ import javax.persistence.FlushModeType;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceUnitUtil;
 
+import org.example.demo.models.Address;
 import org.example.demo.models.Item;
+import org.example.demo.models.User;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.junit.jupiter.api.Test;
@@ -354,5 +356,29 @@ public class SimpleTransitionsTest {
          * los métodos .equals() y .hashCode(). En particular si usamos entidades en estado DETACHED
          */
 
+    }
+    
+    @Test
+    public void detach() {
+        EntityManager em = emf.createEntityManager();
+        em.getTransaction().begin();
+
+        User someUser = new User();
+        someUser.setUsername("johndoe");
+        someUser.setHomeAddress(new Address("Some Street", "1234", "Some City"));
+        em.persist(someUser);
+        em.getTransaction().commit();
+        em.close();
+        Long USER_ID = someUser.getId();
+
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
+
+        User user = em.find(User.class, USER_ID);
+        em.detach(user);
+        assertFalse(em.contains(user));
+
+        em.getTransaction().commit();
+        em.close();
     }
 }
