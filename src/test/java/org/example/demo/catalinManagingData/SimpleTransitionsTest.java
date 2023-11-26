@@ -339,6 +339,11 @@ public class SimpleTransitionsTest {
         allItems.add(b);
         allItems.add(c);
         assertEquals(2, allItems.size()); // That seems wrong and arbitrary!
+        
+        /**
+         * Porque a y b fueron "detached" juntos, es decir, referencian al mismo objeto en el mismo contexto, 
+         * y c fue en otro contexto con otro em por lo tanto es diferente
+         */
 
     }
 }
