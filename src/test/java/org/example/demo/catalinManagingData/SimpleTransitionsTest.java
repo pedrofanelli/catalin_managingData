@@ -348,6 +348,10 @@ public class SimpleTransitionsTest {
          * Si hubieramos sobreescrito el .equals() method en el objeto, entonces si serían iguales, pero no lo hicimos,
          * entonces recurre al default, que es == en Java. Es decir, la referencia, la key al objeto. En Hibernate, si
          * bien puede ser que se referencie al mismo objeto, en diferentes contextos, son diferentes referencias o keys.
+         * Referencian a una instancia diferente el el Heap. Tendríamos 3 referencias a 2 instancias.
+         * 
+         * Las propiedades y todo son iguales, pero la referencia es diferente. Por eso es tan importante override
+         * los métodos .equals() y .hashCode(). En particular si usamos entidades en estado DETACHED
          */
 
     }
