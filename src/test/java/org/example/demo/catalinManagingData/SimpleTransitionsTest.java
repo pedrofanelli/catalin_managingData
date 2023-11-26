@@ -10,7 +10,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+
 import org.hibernate.LazyInitializationException;
+import org.hibernate.Session;
 
 
 
@@ -153,7 +157,7 @@ public class SimpleTransitionsTest {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
         Item someItem = new Item();
-        someItem.setName("Some Item");
+        someItem.setName("Some Item to transient");
         em.persist(someItem);
         em.getTransaction().commit();
         em.close();
@@ -210,5 +214,52 @@ public class SimpleTransitionsTest {
         assertNull(item);
         em.getTransaction().commit();
         em.close();
+    }
+    
+    @Test
+    public void refresh() throws ExecutionException, InterruptedException {
+        EntityManager em = emf.createEntityManager();
+        em.getTransaction().begin();
+        Item someItem = new Item();
+        someItem.setName("Some Item");
+        em.persist(someItem);
+        em.getTransaction().commit();
+        em.close();
+        Long ITEM_ID = someItem.getId();
+
+        em = emf.createEntityManager();
+        em.getTransaction().begin();
+
+        Item item = em.find(Item.class, ITEM_ID);
+        item.setName("Some Name");
+
+        // Someone updates this row in the database!
+        Executors.newSingleThreadExecutor().submit(() -> {
+            EntityManager em1 = emf.createEntityManager();
+            try {
+                em1.getTransaction().begin();
+
+                Session session = em1.unwrap(Session.class);
+                session.doWork(con -> {
+                    Item item1 = em1.find(Item.class, ITEM_ID);
+                    item1.setName("Concurrent Update Name");
+                    em1.persist(item1);
+                });
+
+                em1.getTransaction().commit();
+                em1.close();
+
+            } catch (Exception ex) {
+                throw new RuntimeException("Concurrent operation failure: " + ex, ex);
+            }
+            return null;
+        }).get();
+
+        em.refresh(item);
+        em.getTransaction().commit(); // Flush: Dirty check and SQL UPDATE
+
+        em.refresh(item);
+        em.close();
+        assertEquals("Concurrent Update Name", item.getName());
     }
 }
